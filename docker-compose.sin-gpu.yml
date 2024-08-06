@@ -1,0 +1,39 @@
+services:
+  ollama: 
+    image: ollama/ollama:latest
+    volumes:
+      - ./models:/models
+    expose:
+      - 11434:11434 
+    environment:  
+      - OLLAMA_MODELS=/models
+    
+  chroma:
+    image: chromadb/chroma:latest
+    volumes:
+      - index_data:/chroma/.chroma/index
+    ports:
+      - 8000:8000
+    networks:
+      - net
+  
+  ui:
+    build: .
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/app
+    depends_on:
+      - ollama
+      - chroma
+    environment:
+    - MODEL=llama3.1
+    - OLLAMA_URL=http://ollama:11434
+    - EMBEDDINGS_MODEL_NAME=all-MiniLM-L6-v2
+    - TARGET_SOURCE_CHUNKS=5
+
+volumes:
+  index_data:
+
+networks:
+  net:
